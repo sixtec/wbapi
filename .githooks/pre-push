@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Pre-push hook — bloqueia push caso Pint (PSR-12) ou PHPStan (level 6) falhem.
+# Instalado automaticamente via: composer hooks:install
+
+set -euo pipefail
+
+BOLD='\033[1m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RESET='\033[0m'
+
+echo ""
+echo -e "${BOLD}[pre-push] Executando verificações de qualidade...${RESET}"
+echo ""
+
+# ── Pint ──────────────────────────────────────────────────────────────────────
+echo -e "${YELLOW}▶ Pint (PSR-12)${RESET}"
+if ! composer lint:check --quiet 2>&1; then
+    echo ""
+    echo -e "${RED}✖ Pint falhou. Corrija os erros de estilo antes de fazer push.${RESET}"
+    echo -e "  Execute ${BOLD}composer lint${RESET} para corrigir automaticamente."
+    echo ""
+    exit 1
+fi
+echo -e "${GREEN}✔ Pint OK${RESET}"
+echo ""
+
+# ── PHPStan ───────────────────────────────────────────────────────────────────
+echo -e "${YELLOW}▶ PHPStan (level 6)${RESET}"
+if ! composer analyse --quiet 2>&1; then
+    echo ""
+    echo -e "${RED}✖ PHPStan falhou. Corrija os erros de análise estática antes de fazer push.${RESET}"
+    echo -e "  Execute ${BOLD}composer analyse${RESET} para ver os detalhes."
+    echo ""
+    exit 1
+fi
+echo -e "${GREEN}✔ PHPStan OK${RESET}"
+echo ""
+
+echo -e "${GREEN}${BOLD}✔ Todas as verificações passaram. Push liberado.${RESET}"
+echo ""
