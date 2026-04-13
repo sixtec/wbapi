@@ -29,7 +29,14 @@
         "quality": [
             "@lint:check",
             "@analyse"
-        ]
+        ],
+        "hooks:install": [
+            "git config core.hooksPath .githooks",
+            "chmod +x .githooks/pre-push",
+            "@php -r \"echo '\\033[0;32m✔ Git hooks instalados em .githooks/\\033[0m\\n';\""
+        ],
+        "post-install-cmd": "@hooks:install",
+        "post-update-cmd": "@hooks:install"
     },
     "minimum-stability": "stable",
     "prefer-stable": true
