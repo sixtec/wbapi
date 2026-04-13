@@ -1,0 +1,36 @@
+{
+    "name": "sixtec/wbapi",
+    "description": "PHP 8.1+ library for WhatsApp Business Cloud API (Meta) integration",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.17",
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sixtec\\WBApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sixtec\\WBApi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "quality": [
+            "@lint:check",
+            "@analyse"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
