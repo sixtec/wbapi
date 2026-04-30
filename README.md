@@ -29,6 +29,30 @@ composer require sixtec/wbapi
 
 ## Configuração
 
+### Cliente instanciável
+
+Use `WBMetaClient` quando sua aplicação precisa de injeção de dependência, múltiplos números, multi-tenant ou workers long-running:
+
+```php
+use Sixtec\WBApi\Config\WBMetaConfig;
+use Sixtec\WBApi\WBMetaClient;
+
+$client = WBMetaClient::fromConfig(new WBMetaConfig(
+    accessToken:        'EAAxxxxxxxxxxxxxxx',
+    phoneNumberId:      '123456789012345',
+    apiVersion:         'v19.0',
+    webhookVerifyToken: 'meu-token-secreto',
+));
+
+$client->to('+5511999999999')
+    ->text('Olá, tudo bem?')
+    ->send();
+```
+
+### Facade estática
+
+A facade continua disponível para aplicações simples:
+
 ```php
 use Sixtec\WBApi\WBMeta;
 use Sixtec\WBApi\Config\WBMetaConfig;
@@ -317,6 +341,7 @@ function handleReceived(MessageReceivedEvent $event): void
 ```
 src/
 ├── WBMeta.php                          # Facade estática (ponto de entrada)
+├── WBMetaClient.php                    # Cliente instanciável para DI/multi-tenant
 ├── Config/
 │   └── WBMetaConfig.php                # DTO de configuração
 ├── Contracts/
@@ -365,7 +390,7 @@ src/
 | Princípio | Aplicação |
 |-----------|-----------|
 | **Clean Architecture** | Domain isolado de infraestrutura (HTTP, Auth) |
-| **Fluent Interface** | `WBMeta::to()->text()->send()` |
+| **Fluent Interface** | `WBMetaClient::fromConfig($config)->to()->text()->send()` e `WBMeta::to()->text()->send()` |
 | **DTOs** | Nunca expostos payloads brutos da Meta |
 | **Mappers** | Conversão DTO → payload em classes dedicadas |
 | **Dependency Inversion** | `HttpClientInterface` e `TokenStorageInterface` |
@@ -375,15 +400,28 @@ src/
 
 ## Injeção de Dependências / Frameworks
 
-Para integrar em um container DI (Laravel, Symfony, etc.), injete diretamente o `MessagingService`:
+Para integrar em um container DI (Laravel, Symfony, etc.), registre `WBMetaClient`:
 
 ```php
 use Sixtec\WBApi\Config\WBMetaConfig;
-use Sixtec\WBApi\Http\GuzzleHttpClient;
-use Sixtec\WBApi\Services\MessagingService;
+use Sixtec\WBApi\WBMetaClient;
+
+$client = WBMetaClient::fromConfig(
+    new WBMetaConfig(accessToken: env('WA_TOKEN'), phoneNumberId: env('WA_PHONE_ID')),
+);
+
+// Registrar no container e injetar onde necessário
+```
+
+Se precisar controlar o transporte HTTP, injete um client compatível com `HttpClientInterface`:
+
+```php
+use Sixtec\WBApi\Config\WBMetaConfig;
+use Sixtec\WBApi\Tests\Fakes\FakeHttpClient;
+use Sixtec\WBApi\WBMetaClient;
 
 $config  = new WBMetaConfig(accessToken: env('WA_TOKEN'), phoneNumberId: env('WA_PHONE_ID'));
-$service = new MessagingService(new GuzzleHttpClient($config), $config);
+$client = WBMetaClient::fromConfig($config, new FakeHttpClient());
 
 // Registrar no container e injetar onde necessário
 ```
@@ -403,13 +441,13 @@ $service = new MessagingService(new GuzzleHttpClient($config), $config);
 ./vendor/bin/phpunit --testsuite Integration
 ```
 
-A suite cobre **26 testes / 73 assertions** usando `FakeHttpClient` — sem chamadas reais à API.
+A suite usa `FakeHttpClient` — sem chamadas reais à API.
 
-Para testar com sua própria lógica, injete um `MessagingService` com `FakeHttpClient` via `WBMeta::bindService()`:
+Para testar com sua própria lógica, injete um `FakeHttpClient` em `WBMetaClient::fromConfig()`:
 
 ```php
 use Sixtec\WBApi\Tests\Fakes\FakeHttpClient;
-use Sixtec\WBApi\Services\MessagingService;
+use Sixtec\WBApi\WBMetaClient;
 
 $fake = new FakeHttpClient();
 $fake->addResponse(200, [
@@ -417,7 +455,7 @@ $fake->addResponse(200, [
     'messages' => [['id' => 'wamid.test01', 'message_status' => 'accepted']],
 ]);
 
-WBMeta::bindService(new MessagingService($fake, $config));
+$client = WBMetaClient::fromConfig($config, $fake);
 ```
 
 ---

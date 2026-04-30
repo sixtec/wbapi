@@ -46,6 +46,22 @@ final class SendMessageTest extends TestCase
         $this->assertSame('Hello from WBMeta!', $req['payload']['text']['body']);
     }
 
+    public function testFacadeClientUsesBoundService(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.clientfacade', 'message_status' => 'accepted']],
+        ]);
+
+        $response = WBMeta::client()
+            ->to('5511999999999')
+            ->text('Hello from client facade')
+            ->send();
+
+        $this->assertSame('wamid.clientfacade', $response->messageId->getValue());
+        $this->assertSame('Hello from client facade', $this->httpClient->getLastRequest()['payload']['text']['body']);
+    }
+
     public function testFacadeSendsImageMessage(): void
     {
         $this->httpClient->addResponse(200, [
