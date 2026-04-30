@@ -6,8 +6,6 @@ namespace Sixtec\WBApi;
 
 use Sixtec\WBApi\Builders\MessageBuilder;
 use Sixtec\WBApi\Config\WBMetaConfig;
-use Sixtec\WBApi\DTOs\MarkMessageAsReadDTO;
-use Sixtec\WBApi\Http\GuzzleHttpClient;
 use Sixtec\WBApi\Services\MessagingService;
 use Sixtec\WBApi\Webhook\WebhookHandler;
 
@@ -28,6 +26,7 @@ final class WBMeta
 {
     private static ?WBMetaConfig $config = null;
     private static ?MessagingService $messagingService = null;
+    private static ?WBMetaClient $client = null;
 
     private function __construct()
     {
@@ -37,6 +36,7 @@ final class WBMeta
     {
         self::$config = $config;
         self::$messagingService = null;
+        self::$client = null;
     }
 
     /**
@@ -45,21 +45,27 @@ final class WBMeta
     public static function bindService(MessagingService $service): void
     {
         self::$messagingService = $service;
+        self::$client = null;
+    }
+
+    public static function client(): WBMetaClient
+    {
+        return self::resolveClient();
     }
 
     public static function to(string $phone): MessageBuilder
     {
-        return new MessageBuilder(self::resolveMessagingService(), $phone);
+        return self::resolveClient()->to($phone);
     }
 
     public static function webhook(): WebhookHandler
     {
-        return new WebhookHandler(self::resolveConfig()->webhookVerifyToken);
+        return self::resolveClient()->webhook();
     }
 
     public static function markAsRead(string $messageId): bool
     {
-        return self::resolveMessagingService()->markAsRead(new MarkMessageAsReadDTO($messageId));
+        return self::resolveClient()->markAsRead($messageId);
     }
 
     /**
@@ -69,22 +75,26 @@ final class WBMeta
     {
         self::$config = null;
         self::$messagingService = null;
+        self::$client = null;
     }
 
-    private static function resolveMessagingService(): MessagingService
+    private static function resolveClient(): WBMetaClient
     {
-        if (self::$messagingService !== null) {
-            return self::$messagingService;
+        if (self::$client !== null) {
+            return self::$client;
         }
 
         $config = self::resolveConfig();
 
-        self::$messagingService = new MessagingService(
-            httpClient: new GuzzleHttpClient($config),
-            config:     $config,
-        );
+        if (self::$messagingService !== null) {
+            self::$client = new WBMetaClient($config, self::$messagingService);
 
-        return self::$messagingService;
+            return self::$client;
+        }
+
+        self::$client = WBMetaClient::fromConfig($config);
+
+        return self::$client;
     }
 
     private static function resolveConfig(): WBMetaConfig
