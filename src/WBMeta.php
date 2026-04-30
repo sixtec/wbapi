@@ -6,6 +6,7 @@ namespace Sixtec\WBApi;
 
 use Sixtec\WBApi\Builders\MessageBuilder;
 use Sixtec\WBApi\Config\WBMetaConfig;
+use Sixtec\WBApi\DTOs\MarkMessageAsReadDTO;
 use Sixtec\WBApi\Http\GuzzleHttpClient;
 use Sixtec\WBApi\Services\MessagingService;
 use Sixtec\WBApi\Webhook\WebhookHandler;
@@ -54,6 +55,11 @@ final class WBMeta
     public static function webhook(): WebhookHandler
     {
         return new WebhookHandler(self::resolveConfig()->webhookVerifyToken);
+    }
+
+    public static function markAsRead(string $messageId): bool
+    {
+        return self::resolveMessagingService()->markAsRead(new MarkMessageAsReadDTO($messageId));
     }
 
     /**
