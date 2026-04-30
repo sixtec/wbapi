@@ -95,6 +95,145 @@ WBMeta::to('+5511999999999')
     ->send();
 ```
 
+### Sticker
+
+```php
+WBMeta::to('+5511999999999')
+    ->sticker('https://example.com/sticker.webp')
+    ->send();
+```
+
+### Responder uma mensagem
+
+```php
+WBMeta::to('+5511999999999')
+    ->replyTo('wamid.HBgLNTUx...')
+    ->text('Resposta vinculada à mensagem original')
+    ->send();
+```
+
+### Reação
+
+```php
+WBMeta::to('+5511999999999')
+    ->reaction('wamid.HBgLNTUx...', '👍')
+    ->send();
+
+WBMeta::to('+5511999999999')
+    ->removeReaction('wamid.HBgLNTUx...')
+    ->send();
+```
+
+### Localização
+
+```php
+WBMeta::to('+5511999999999')
+    ->location(-8.0476, -34.8770, 'Recife', 'Recife, PE')
+    ->send();
+```
+
+### Contato
+
+```php
+WBMeta::to('+5511999999999')
+    ->contact('Maria Silva', '+55 11 99999-9999', 'Maria')
+    ->send();
+```
+
+Para contatos completos, informe diretamente os objetos no formato da Meta:
+
+```php
+WBMeta::to('+5511999999999')
+    ->contacts([
+        [
+            'name' => [
+                'formatted_name' => 'Maria Silva',
+                'first_name' => 'Maria',
+            ],
+            'phones' => [
+                ['phone' => '5511999999999', 'type' => 'CELL'],
+            ],
+        ],
+    ])
+    ->send();
+```
+
+### Botões interativos
+
+```php
+WBMeta::to('+5511999999999')
+    ->buttons('Escolha uma opção', [
+        ['id' => 'confirm', 'title' => 'Confirmar'],
+        ['id' => 'cancel', 'title' => 'Cancelar'],
+    ])
+    ->send();
+```
+
+### Lista interativa
+
+```php
+WBMeta::to('+5511999999999')
+    ->list('Escolha um item', 'Ver opções', [
+        [
+            'title' => 'Produtos',
+            'rows' => [
+                ['id' => 'sku-1', 'title' => 'Produto 1'],
+                ['id' => 'sku-2', 'title' => 'Produto 2'],
+            ],
+        ],
+    ])
+    ->send();
+```
+
+### Produto de catálogo
+
+```php
+WBMeta::to('+5511999999999')
+    ->product('Veja este produto', '1234567890', 'sku-1')
+    ->send();
+```
+
+### Lista de produtos de catálogo
+
+```php
+WBMeta::to('+5511999999999')
+    ->productList('Veja estes produtos', '1234567890', [
+        [
+            'title' => 'Produtos',
+            'product_items' => [
+                ['product_retailer_id' => 'sku-1'],
+                ['product_retailer_id' => 'sku-2'],
+            ],
+        ],
+    ])
+    ->send();
+```
+
+### Payload interativo avançado
+
+```php
+WBMeta::to('+5511999999999')
+    ->interactive([
+        'type' => 'button',
+        'body' => ['text' => 'Escolha uma opção'],
+        'action' => [
+            'buttons' => [
+                [
+                    'type' => 'reply',
+                    'reply' => ['id' => 'yes', 'title' => 'Sim'],
+                ],
+            ],
+        ],
+    ])
+    ->send();
+```
+
+### Marcar mensagem como lida
+
+```php
+WBMeta::markAsRead('wamid.HBgLNTUx...');
+```
+
 ### Template
 
 ```php
