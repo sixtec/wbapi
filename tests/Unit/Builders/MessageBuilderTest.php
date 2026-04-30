@@ -113,6 +113,137 @@ final class MessageBuilderTest extends TestCase
         $this->assertSame('Q1 Report', $req['payload']['document']['caption']);
     }
 
+    public function testSendStickerMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.sticker01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->sticker('https://example.com/sticker.webp')
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('sticker', $req['payload']['type']);
+        $this->assertSame('https://example.com/sticker.webp', $req['payload']['sticker']['link']);
+    }
+
+    public function testSendReactionMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.react01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->reaction('wamid.inbound', "\u{1F44D}")
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('reaction', $req['payload']['type']);
+        $this->assertSame('wamid.inbound', $req['payload']['reaction']['message_id']);
+        $this->assertSame("\u{1F44D}", $req['payload']['reaction']['emoji']);
+    }
+
+    public function testSendLocationMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.location01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->location(-8.0476, -34.8770, 'Recife', 'Recife, PE')
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('location', $req['payload']['type']);
+        $this->assertSame(-8.0476, $req['payload']['location']['latitude']);
+        $this->assertSame(-34.8770, $req['payload']['location']['longitude']);
+        $this->assertSame('Recife', $req['payload']['location']['name']);
+        $this->assertSame('Recife, PE', $req['payload']['location']['address']);
+    }
+
+    public function testSendContactMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.contact01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->contact('Mario Lucas', '+55 81 99999-9999', 'Mario')
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('contacts', $req['payload']['type']);
+        $this->assertSame('Mario Lucas', $req['payload']['contacts'][0]['name']['formatted_name']);
+        $this->assertSame('5581999999999', $req['payload']['contacts'][0]['phones'][0]['phone']);
+    }
+
+    public function testSendInteractiveButtonsMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.buttons01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->buttons('Escolha uma opcao', [
+                ['id' => 'yes', 'title' => 'Sim'],
+                ['id' => 'no', 'title' => 'Nao'],
+            ], 'Rodape')
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('interactive', $req['payload']['type']);
+        $this->assertSame('button', $req['payload']['interactive']['type']);
+        $this->assertSame('yes', $req['payload']['interactive']['action']['buttons'][0]['reply']['id']);
+        $this->assertSame('Rodape', $req['payload']['interactive']['footer']['text']);
+    }
+
+    public function testSendProductListMessage(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.catalog01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->productList('Veja os produtos', 'catalog-1', [
+                [
+                    'title' => 'Linha A',
+                    'product_items' => [
+                        ['product_retailer_id' => 'sku-1'],
+                    ],
+                ],
+            ])
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('interactive', $req['payload']['type']);
+        $this->assertSame('product_list', $req['payload']['interactive']['type']);
+        $this->assertSame('catalog-1', $req['payload']['interactive']['action']['catalog_id']);
+        $this->assertSame('sku-1', $req['payload']['interactive']['action']['sections'][0]['product_items'][0]['product_retailer_id']);
+    }
+
+    public function testReplyContextIsIncluded(): void
+    {
+        $this->httpClient->addResponse(200, [
+            'contacts' => [['input' => '5511999999999']],
+            'messages' => [['id' => 'wamid.reply01', 'message_status' => 'accepted']],
+        ]);
+
+        (new MessageBuilder($this->service, '5511999999999'))
+            ->replyTo('wamid.original')
+            ->text('Resposta')
+            ->send();
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('wamid.original', $req['payload']['context']['message_id']);
+    }
+
     public function testSendTemplateMessage(): void
     {
         $this->httpClient->addResponse(200, [

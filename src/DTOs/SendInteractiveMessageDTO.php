@@ -6,16 +6,14 @@ namespace Sixtec\WBApi\DTOs;
 
 use Sixtec\WBApi\Domain\ValueObjects\PhoneNumber;
 
-/**
- * @author Mário Lucas
- * @since  2026-04-12
- */
-final class SendTextMessageDTO
+final class SendInteractiveMessageDTO
 {
+    /**
+     * @param array<string, mixed> $interactive
+     */
     public function __construct(
         public readonly PhoneNumber $to,
-        public readonly string $body,
-        public readonly bool $previewUrl = false,
+        public readonly array $interactive,
         public readonly ?string $contextMessageId = null,
     ) {
     }

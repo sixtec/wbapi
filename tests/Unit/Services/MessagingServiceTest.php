@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sixtec\WBApi\Config\WBMetaConfig;
 use Sixtec\WBApi\Domain\ValueObjects\MediaUrl;
 use Sixtec\WBApi\Domain\ValueObjects\PhoneNumber;
+use Sixtec\WBApi\DTOs\MarkMessageAsReadDTO;
 use Sixtec\WBApi\DTOs\MediaType;
 use Sixtec\WBApi\DTOs\MessageResponseDTO;
 use Sixtec\WBApi\DTOs\SendMediaMessageDTO;
@@ -114,5 +115,20 @@ final class MessagingServiceTest extends TestCase
             to: new PhoneNumber('5511999999999'),
             body: 'Hi',
         ));
+    }
+
+    public function testMarkAsReadBuildsCorrectPayload(): void
+    {
+        $this->httpClient->addResponse(200, ['success' => true]);
+
+        $result = $this->service->markAsRead(new MarkMessageAsReadDTO('wamid.inbound'));
+
+        $this->assertTrue($result);
+
+        $req = $this->httpClient->getLastRequest();
+        $this->assertSame('POST', $req['method']);
+        $this->assertSame('read', $req['payload']['status']);
+        $this->assertSame('wamid.inbound', $req['payload']['message_id']);
+        $this->assertSame('whatsapp', $req['payload']['messaging_product']);
     }
 }

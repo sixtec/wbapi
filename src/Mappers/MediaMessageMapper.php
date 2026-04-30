@@ -13,6 +13,8 @@ use Sixtec\WBApi\DTOs\SendMediaMessageDTO;
  */
 final class MediaMessageMapper
 {
+    use ContextPayload;
+
     /**
      * @return array<string, mixed>
      */
@@ -30,12 +32,12 @@ final class MediaMessageMapper
 
         $type = $dto->mediaType->value;
 
-        return [
+        return $this->withContext([
             'messaging_product' => 'whatsapp',
             'recipient_type'    => 'individual',
             'to'                => $dto->to->getValue(),
             'type'              => $type,
             $type               => $media,
-        ];
+        ], $dto->contextMessageId);
     }
 }

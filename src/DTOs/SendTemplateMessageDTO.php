@@ -20,6 +20,7 @@ final class SendTemplateMessageDTO
         public readonly string $templateName,
         public readonly string $languageCode = 'pt_BR',
         public readonly array $components = [],
+        public readonly ?string $contextMessageId = null,
     ) {
     }
 }

@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace Sixtec\WBApi\Mappers;
 
-use Sixtec\WBApi\DTOs\SendTextMessageDTO;
+use Sixtec\WBApi\DTOs\SendContactsMessageDTO;
 
-/**
- * @author Mário Lucas
- * @since  2026-04-12
- */
-final class TextMessageMapper
+final class ContactsMessageMapper
 {
     use ContextPayload;
 
     /**
      * @return array<string, mixed>
      */
-    public function toPayload(SendTextMessageDTO $dto): array
+    public function toPayload(SendContactsMessageDTO $dto): array
     {
         return $this->withContext([
             'messaging_product' => 'whatsapp',
             'recipient_type'    => 'individual',
             'to'                => $dto->to->getValue(),
-            'type'              => 'text',
-            'text'              => [
-                'preview_url' => $dto->previewUrl,
-                'body'        => $dto->body,
-            ],
+            'type'              => 'contacts',
+            'contacts'          => $dto->contacts,
         ], $dto->contextMessageId);
     }
 }

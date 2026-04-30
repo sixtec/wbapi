@@ -19,6 +19,7 @@ final class SendMediaMessageDTO
         public readonly MediaUrl $url,
         public readonly ?string $caption = null,
         public readonly ?string $filename = null,
+        public readonly ?string $contextMessageId = null,
     ) {
     }
 }

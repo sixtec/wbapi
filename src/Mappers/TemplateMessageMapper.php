@@ -14,12 +14,14 @@ use Sixtec\WBApi\DTOs\TemplateParameterDTO;
  */
 final class TemplateMessageMapper
 {
+    use ContextPayload;
+
     /**
      * @return array<string, mixed>
      */
     public function toPayload(SendTemplateMessageDTO $dto): array
     {
-        return [
+        return $this->withContext([
             'messaging_product' => 'whatsapp',
             'recipient_type'    => 'individual',
             'to'                => $dto->to->getValue(),
@@ -32,7 +34,7 @@ final class TemplateMessageMapper
                     $dto->components,
                 ),
             ],
-        ];
+        ], $dto->contextMessageId);
     }
 
     /**
