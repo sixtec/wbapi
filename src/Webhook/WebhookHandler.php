@@ -8,6 +8,7 @@ use Sixtec\WBApi\Exceptions\WebhookVerificationException;
 use Sixtec\WBApi\Webhook\Events\MessageDeliveredEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReadEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReceivedEvent;
+use Sixtec\WBApi\Webhook\Events\MessageTypingEvent;
 
 /**
  * @author Mário Lucas
@@ -43,8 +44,8 @@ final class WebhookHandler
     /**
      * Parses the incoming POST payload into typed domain events.
      *
-        * @param  array<string, mixed> $payload  Decoded JSON from the webhook POST body
-     * @return array<MessageReceivedEvent|MessageDeliveredEvent|MessageReadEvent>
+     * @param  array<string, mixed>  $payload  Decoded JSON from the webhook POST body
+     * @return array<MessageReceivedEvent|MessageDeliveredEvent|MessageReadEvent|MessageTypingEvent>
      */
     public function handle(array $payload): array
     {

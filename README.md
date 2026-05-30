@@ -314,6 +314,7 @@ echo $challenge;
 use Sixtec\WBApi\Webhook\Events\MessageReceivedEvent;
 use Sixtec\WBApi\Webhook\Events\MessageDeliveredEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReadEvent;
+use Sixtec\WBApi\Webhook\Events\MessageTypingEvent;
 
 $payload = json_decode(file_get_contents('php://input'), true);
 $events  = WBMeta::webhook()->handle($payload);
@@ -323,6 +324,7 @@ foreach ($events as $event) {
         $event instanceof MessageReceivedEvent  => handleReceived($event),
         $event instanceof MessageDeliveredEvent => handleDelivered($event),
         $event instanceof MessageReadEvent      => handleRead($event),
+        $event instanceof MessageTypingEvent    => handleTyping($event),
     };
 }
 
@@ -331,6 +333,11 @@ function handleReceived(MessageReceivedEvent $event): void
     // $event->messageId, $event->from, $event->type
     // $event->textBody  — preenchido quando type === 'text'
     // $event->mediaData — preenchido para tipos de mídia
+}
+
+function handleTyping(MessageTypingEvent $event): void
+{
+    // $event->contactId, $event->timestamp, $event->messageId
 }
 ```
 
@@ -378,7 +385,8 @@ src/
 │   └── Events/
 │       ├── MessageReceivedEvent.php
 │       ├── MessageDeliveredEvent.php
-│       └── MessageReadEvent.php
+│       ├── MessageReadEvent.php
+│       └── MessageTypingEvent.php
 └── Exceptions/
     ├── WBMetaException.php
     ├── HttpException.php

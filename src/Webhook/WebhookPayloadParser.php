@@ -7,6 +7,7 @@ namespace Sixtec\WBApi\Webhook;
 use Sixtec\WBApi\Webhook\Events\MessageDeliveredEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReadEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReceivedEvent;
+use Sixtec\WBApi\Webhook\Events\MessageTypingEvent;
 
 /**
  * @author Mário Lucas
@@ -15,8 +16,8 @@ use Sixtec\WBApi\Webhook\Events\MessageReceivedEvent;
 final class WebhookPayloadParser
 {
     /**
-        * @param  array<string, mixed> $payload  Decoded JSON body from Meta webhook POST
-     * @return array<MessageReceivedEvent|MessageDeliveredEvent|MessageReadEvent>
+     * @param  array<string, mixed>  $payload  Decoded JSON body from Meta webhook POST
+     * @return array<MessageReceivedEvent|MessageDeliveredEvent|MessageReadEvent|MessageTypingEvent>
      */
     public function parse(array $payload): array
     {
@@ -35,7 +36,11 @@ final class WebhookPayloadParser
                 }
 
                 foreach ($value['statuses'] ?? [] as $status) {
-                    $events[] = $this->parseStatus($status);
+                    $event = $this->parseStatus($status);
+
+                    if ($event !== null) {
+                        $events[] = $event;
+                    }
                 }
             }
         }
@@ -46,9 +51,18 @@ final class WebhookPayloadParser
     /**
      * @param array<string, mixed> $message
      */
-    private function parseMessage(array $message): MessageReceivedEvent
+    private function parseMessage(array $message): MessageReceivedEvent|MessageTypingEvent
     {
         $type = $message['type'] ?? 'text';
+
+        if ($type === 'typing') {
+            return new MessageTypingEvent(
+                contactId: $message['from'],
+                timestamp: $message['timestamp'],
+                messageId: $message['id'] ?? null,
+                rawData:   $message,
+            );
+        }
 
         return new MessageReceivedEvent(
             messageId: $message['id'],
@@ -64,19 +78,26 @@ final class WebhookPayloadParser
     /**
      * @param array<string, mixed> $status
      */
-    private function parseStatus(array $status): MessageDeliveredEvent|MessageReadEvent
+    private function parseStatus(array $status): MessageDeliveredEvent|MessageReadEvent|MessageTypingEvent|null
     {
         return match ($status['status'] ?? '') {
+            'typing' => new MessageTypingEvent(
+                contactId: $status['recipient_id'],
+                timestamp: $status['timestamp'],
+                messageId: $status['id'] ?? null,
+                rawData:   $status,
+            ),
             'read' => new MessageReadEvent(
                 messageId:   $status['id'],
                 recipientId: $status['recipient_id'],
                 timestamp:   $status['timestamp'],
             ),
-            default => new MessageDeliveredEvent(
+            'delivered' => new MessageDeliveredEvent(
                 messageId:   $status['id'],
                 recipientId: $status['recipient_id'],
                 timestamp:   $status['timestamp'],
             ),
+            default => null,
         };
     }
 }

@@ -9,6 +9,7 @@ use Sixtec\WBApi\Exceptions\WebhookVerificationException;
 use Sixtec\WBApi\Webhook\Events\MessageDeliveredEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReadEvent;
 use Sixtec\WBApi\Webhook\Events\MessageReceivedEvent;
+use Sixtec\WBApi\Webhook\Events\MessageTypingEvent;
 use Sixtec\WBApi\Webhook\WebhookHandler;
 
 final class WebhookHandlerTest extends TestCase
@@ -128,6 +129,48 @@ final class WebhookHandlerTest extends TestCase
 
         $this->assertCount(1, $events);
         $this->assertInstanceOf(MessageReadEvent::class, $events[0]);
+    }
+
+    public function testHandleTypingStatus(): void
+    {
+        $payload = $this->buildStatusPayload([
+            'id'           => 'wamid.005',
+            'status'       => 'typing',
+            'timestamp'    => '1718000004',
+            'recipient_id' => '5511999999999',
+        ]);
+
+        $events = $this->handler->handle($payload);
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(MessageTypingEvent::class, $events[0]);
+
+        /** @var MessageTypingEvent $event */
+        $event = $events[0];
+        $this->assertSame('5511999999999', $event->contactId);
+        $this->assertSame('1718000004', $event->timestamp);
+        $this->assertSame('wamid.005', $event->messageId);
+    }
+
+    public function testHandleTypingMessage(): void
+    {
+        $payload = $this->buildMessagePayload([
+            'id'        => 'wamid.006',
+            'from'      => '5511999999999',
+            'type'      => 'typing',
+            'timestamp' => '1718000005',
+        ]);
+
+        $events = $this->handler->handle($payload);
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(MessageTypingEvent::class, $events[0]);
+
+        /** @var MessageTypingEvent $event */
+        $event = $events[0];
+        $this->assertSame('5511999999999', $event->contactId);
+        $this->assertSame('1718000005', $event->timestamp);
+        $this->assertSame('wamid.006', $event->messageId);
     }
 
     public function testHandleMixedMessagesAndStatuses(): void
