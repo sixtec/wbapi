@@ -63,11 +63,17 @@ final class TemplateMessageMapper
      */
     private function mapParameter(TemplateParameterDTO $parameter): array
     {
-        return match ($parameter->type) {
+        $payload = match ($parameter->type) {
             'image'    => ['type' => 'image',    'image'    => ['link' => $parameter->value]],
             'video'    => ['type' => 'video',    'video'    => ['link' => $parameter->value]],
             'document' => ['type' => 'document', 'document' => ['link' => $parameter->value]],
             default    => ['type' => 'text',     'text'     => $parameter->value],
         };
+
+        if ($parameter->parameterName !== null && $parameter->parameterName !== '') {
+            $payload['parameter_name'] = $parameter->parameterName;
+        }
+
+        return $payload;
     }
 }

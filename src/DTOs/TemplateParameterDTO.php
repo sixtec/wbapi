@@ -13,6 +13,7 @@ final class TemplateParameterDTO
     public function __construct(
         public readonly string $type,   // text | image | video | document
         public readonly string $value,
+        public readonly ?string $parameterName = null, // named-parameter templates only
     ) {
     }
 }
